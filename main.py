@@ -3,10 +3,10 @@ from pymongo import MongoClient
 import os
 
 # Initialize Bot and MongoDB client
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-MONGO_URI = os.getenv("MONGO_URI")
-BROADCAST_CHANNEL_ID = os.getenv("BROADCAST_CHANNEL_ID")  # Optional broadcast channel ID
-ADMIN_USER_ID = int(os.getenv("ADMIN_USER_ID"))  # Replace with your admin user ID or set it as an environment variable
+BOT_TOKEN = "7207023522:AAHhYRF4EKT8ZcaX2IdmUmy2X7kzZ5D8OUc"
+MONGO_URI = "mongodb+srv://uramit0001:EZ1u5bfKYZ52XeGT@cluster0.qnbzn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+BROADCAST_CHANNEL_ID = "-1002356766494"  # Optional broadcast channel ID
+ADMIN_USER_ID = int("2031106491")  # Replace with your admin user ID or set it as an environment variable
 
 bot = telebot.TeleBot(BOT_TOKEN)
 client = MongoClient(MONGO_URI)
