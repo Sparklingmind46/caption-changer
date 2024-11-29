@@ -22,7 +22,7 @@ def send_start_message(chat_id):
         "<blockquote><b>👨‍💻 ᴅᴇᴠʟᴏᴘᴇʀ : <a href='https://t.me/Ur_Amit_01'>ꫝᴍɪᴛ ꢺɪɴɢʜ ⚝ 🥀</a></b></blockquote>"
         )
         
-    data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": json.dumps(keyboard)}
+    data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML" }
     requests.post(url, data=data)
 
 # Function to send a message
