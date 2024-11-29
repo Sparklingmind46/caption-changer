@@ -6,6 +6,34 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+# Telegram API URL
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
+
+# Function to send a start message with a developer button
+def send_start_message(chat_id):
+    url = f"{TELEGRAM_API_URL}/sendMessage"
+    text = (
+        "Welcome to the bot, i can add channel username to evey new post in your channel!\n"
+        "Contact my developer to get more info about me.\n\n"
+        "> *@Ur_Amit_01*"
+    )
+    keyboard = {
+        "inline_keyboard": [[
+            {"text": "Contact Developer", "url": "https://t.me/Ur_Amit_01"}
+        ]]
+    }
+    data = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown", "reply_markup": json.dumps(keyboard)}
+    requests.post(url, data=data)
+
+
+@app.route("/", methods=["POST"])
+def webhook():
+    update = request.get_json()
+    if "message" in update and update["message"].get("text") == "/start":
+        send_start_message(update["message"]["chat"]["id"])
+    return "OK", 200
+
+
 # Get environment variables
 BOT_TOKEN = os.getenv("BOT_TOKEN")  # Your bot token
 CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")  # Your channel username
@@ -69,11 +97,13 @@ def webhook():
         message_id = post["message_id"]
 
         if "text" in post:
-            new_text = post["text"] + f"\n\n{CHANNEL_USERNAME}"
-            edit_message(chat_id, message_id, new_text=new_text)
+            # Bold and quote the channel username
+            new_text = post["text"] + f"\n\n> *{CHANNEL_USERNAME}*"
+            edit_message(chat_id, message_id, new_text=new_text, parse_mode="Markdown")
         elif "caption" in post:
-            new_caption = post["caption"] + f"\n\n{CHANNEL_USERNAME}"
-            edit_message(chat_id, message_id, new_caption=new_caption)
+            # Bold and quote the channel username
+            new_caption = post["caption"] + f"\n\n> *{CHANNEL_USERNAME}*"
+            edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="Markdown")
 
     return "OK", 200
 
