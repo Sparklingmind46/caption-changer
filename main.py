@@ -29,7 +29,16 @@ def send_start_message(chat_id):
     data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": json.dumps(keyboard)}
     requests.post(url, data=data)
 
+def send_message(chat_id, text):
+    token = 'BOT_TOKEN'  # Replace with your bot token
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    payload = {'chat_id': chat_id, 'text': text}
+    requests.post(url, data=payload)
 
+def get_custom_caption(chat_id):
+    # For now, let's just return a default caption
+    return "Default caption" 
+    
 @app.route("/", methods=["POST"])
 def webhook():
     update = request.get_json()
