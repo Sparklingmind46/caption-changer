@@ -1,100 +1,89 @@
-import telebot
-from pymongo import MongoClient
 import os
+import json
+import requests
+import logging
+from flask import Flask, request
 
-# Initialize Bot and MongoDB client
-BOT_TOKEN = "7207023522:AAHhYRF4EKT8ZcaX2IdmUmy2X7kzZ5D8OUc"
-MONGO_URI = "mongodb+srv://uramit0001:EZ1u5bfKYZ52XeGT@cluster0.qnbzn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-BROADCAST_CHANNEL_ID = "-1002356766494"  # Optional broadcast channel ID
-ADMIN_USER_ID = int("2031106491")  # Replace with your admin user ID or set it as an environment variable
+app = Flask(__name__)
 
-bot = telebot.TeleBot(BOT_TOKEN)
-client = MongoClient(MONGO_URI)
-db = client['telegram_bot']
-caption_collection = db['captions']
-user_collection = db['users']  # MongoDB collection to store user IDs
+# Get environment variables
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # Your bot token
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")  # Your channel username
 
-# Store user ID when they start the bot
-@bot.message_handler(commands=['start'])
-def start(message):
-    user_id = message.from_user.id
-    username = message.from_user.username
+# Telegram API URL
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-    # Save the user ID and username to MongoDB if not already saved
-    if not user_collection.find_one({"user_id": user_id}):
-        user_collection.insert_one({"user_id": user_id, "username": username})
-    
-    bot.reply_to(message, "Welcome to the bot!")
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Command to set a custom caption, working in any channel
-@bot.message_handler(commands=['setcaption'], func=lambda message: message.chat.type == 'channel')
-def set_caption(message):
-    channel_id = message.chat.id
-    caption = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else None
-    
-    if caption:
-        # Save or update custom caption for the channel
-        caption_collection.update_one({"channel_id": channel_id}, {"$set": {"caption": caption}}, upsert=True)
-        bot.reply_to(message, f"Custom caption set to: {caption}")
-        
-        # Optionally notify the broadcast channel
-        if BROADCAST_CHANNEL_ID:
-            bot.send_message(BROADCAST_CHANNEL_ID, f"Custom caption set in channel {channel_id}: {caption}")
+# Function to edit message text or caption
+def edit_message(chat_id, message_id, new_text=None, new_caption=None):
+    if new_text:
+        url = f"{TELEGRAM_API_URL}/editMessageText"
+        data = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "text": new_text,
+        }
+    elif new_caption:
+        url = f"{TELEGRAM_API_URL}/editMessageCaption"
+        data = {
+            "chat_id": chat_id,
+            "message_id": message_id,
+            "caption": new_caption,
+        }
     else:
-        bot.reply_to(message, "Please provide a caption after the command.")
-
-# Command to clear the custom caption in the channel
-@bot.message_handler(commands=['clearcaption'], func=lambda message: message.chat.type == 'channel')
-def clear_caption(message):
-    channel_id = message.chat.id
-    caption_collection.delete_one({"channel_id": channel_id})
-    bot.reply_to(message, "The custom caption for this channel has been cleared.")
+        raise ValueError("Either new_text or new_caption must be provided.")
     
-    # Optionally notify the broadcast channel
-    if BROADCAST_CHANNEL_ID:
-        bot.send_message(BROADCAST_CHANNEL_ID, f"Custom caption cleared in channel {channel_id}")
-
-# Monitor for new media or files in any channel
-@bot.channel_post_handler(content_types=['document', 'photo', 'video', 'audio'])
-def handle_new_media(message):
-    # Get file information
-    channel_id = message.chat.id
-    file_name = getattr(message.document, 'file_name', 'media_file')  # Use media_file if no filename is present
-    current_caption = message.caption if message.caption else ""
-
-    # Fetch the custom caption for this channel, if it exists
-    custom_caption_data = caption_collection.find_one({"channel_id": channel_id})
-    custom_caption = custom_caption_data["caption"] if custom_caption_data else ""
-
-    # If there's a custom caption, replace {filename} with the actual file name and {caption} with the existing caption (if any)
-    if custom_caption:
-        caption_to_use = custom_caption.replace("{filename}", file_name).replace("{caption}", current_caption)
-        bot.edit_message_caption(chat_id=channel_id, message_id=message.message_id, caption=caption_to_use)
-        
-        # Optionally notify the broadcast channel
-        if BROADCAST_CHANNEL_ID:
-            bot.send_message(BROADCAST_CHANNEL_ID, f"File updated in channel {channel_id} with caption: {caption_to_use}")
+    response = requests.post(url, data=data)
+    
+    if response.status_code != 200:
+        logger.error(f"Error editing message: {response.status_code} - {response.text}")
     else:
-        bot.reply_to(message, "No custom caption set for this channel.")
+        logger.info(f"Message edited successfully: {response.json()}")
+    return response.json()
 
-# Function to send a message to all users who have started the bot
-def send_message_to_all_users(message_text):
-    users = user_collection.find()  # Fetch all users who started the bot
-    for user in users:
-        try:
-            bot.send_message(user['user_id'], message_text)
-        except telebot.apihelper.ApiException as e:
-            print(f"Failed to send message to {user['user_id']}: {e}")
+# Function to set the webhook
+def set_webhook():
+    webhook_url = os.getenv("WEBHOOK_URL")  # Your Koyeb app's public URL
+    if not webhook_url:
+        raise ValueError("WEBHOOK_URL is not set in environment variables.")
+    
+    url = f"{TELEGRAM_API_URL}/setWebhook"
+    data = {"url": webhook_url}
+    response = requests.post(url, data=data)
+    
+    if response.status_code != 200:
+        raise RuntimeError(f"Failed to set webhook: {response.text}")
+    return response.json()
 
-# Admin-only command to broadcast a message to all users
-@bot.message_handler(commands=['broadcast'])
-def broadcast(message):
-    if message.from_user.id == ADMIN_USER_ID:
-        message_text = message.text.split(maxsplit=1)[1] if len(message.text.split()) > 1 else "No message provided"
-        send_message_to_all_users(message_text)
-        bot.reply_to(message, "Broadcast message sent to all users.")
-    else:
-        bot.reply_to(message, "You are not authorized to broadcast messages.")
+@app.route("/", methods=["POST"])
+def webhook():
+    # Parse incoming update from Telegram
+    update = request.get_json()
 
-# Start polling
-bot.polling()
+    if "channel_post" in update:
+        post = update["channel_post"]
+        chat_id = post["chat"]["id"]
+        message_id = post["message_id"]
+
+        if "text" in post:
+            new_text = post["text"] + f"\n\n{CHANNEL_USERNAME}"
+            edit_message(chat_id, message_id, new_text=new_text)
+        elif "caption" in post:
+            new_caption = post["caption"] + f"\n\n{CHANNEL_USERNAME}"
+            edit_message(chat_id, message_id, new_caption=new_caption)
+
+    return "OK", 200
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    return "OK", 200
+
+if __name__ == "__main__":
+    # Set webhook when the script starts
+    logger.info("Setting webhook...")
+    result = set_webhook()
+    logger.info(f"Webhook set: {result}")
+    app.run(host="0.0.0.0", port=5000)
