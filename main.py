@@ -6,6 +6,10 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+# Get environment variables
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # Your bot token
+CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")  # Your channel username
+
 # Telegram API URL
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
@@ -32,14 +36,6 @@ def webhook():
     if "message" in update and update["message"].get("text") == "/start":
         send_start_message(update["message"]["chat"]["id"])
     return "OK", 200
-
-
-# Get environment variables
-BOT_TOKEN = os.getenv("BOT_TOKEN")  # Your bot token
-CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")  # Your channel username
-
-# Telegram API URL
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
