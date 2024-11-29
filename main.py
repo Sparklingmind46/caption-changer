@@ -17,17 +17,26 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 def send_start_message(chat_id):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     text = (
-        "<b>Welcome to the bot, I can add channel username to every new post in your channel!</b>\n\n"
-        "<b>Contact my developer to get more info about me.</b>\n\n"
-        "<blockquote><b>@Ur_amit_01 🥀</b></blockquote>*"
-    )
+        "<b>Welcome to the Bot!</b>\n\n"
+        "<b>This bot allows you to:</b>\n"
+        "1. Add a custom caption to your channel posts.\n"
+        "2. Add your custom username to your channel posts .\n\n"
+        
+        "<b>Commands:</b>\n"
+        "/setcaption <i>[Your custom caption]</i> - Set a custom caption for your posts.\n\n"
+        
+        "<b>Developer Contact:</b>\n"
+        "If you need help, you can contact my creator by clicking the button below.\n\n"
+        
+        "<blockquote><b>@Ur_amit_01 🥀</b></blockquote>"
+    ) 
     keyboard = {
         "inline_keyboard": [[
             {"text": "Developer 🪷", "url": "https://t.me/Ur_Amit_01"}
         ]]
-    }
+    } 
     data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": json.dumps(keyboard)}
-    requests.post(url, data=data)
+    requests.post(url, data=data) 
 
 def send_message(chat_id, text):
     token = 'BOT_TOKEN'  # Replace with your bot token
