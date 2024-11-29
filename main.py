@@ -17,14 +17,8 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 def send_start_message(chat_id):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     text = (
-        "<b>Welcome to the Bot!</b>\n\n"
-        "<b>This bot allows you to:</b>\n"
-        "1. Add a custom caption to your channel posts.\n"
-        "2. Add your custom username to your channel posts.\n\n"
-        "<b>Commands:</b>\n"
-        "/setcaption <i>[Your custom caption]</i> - Set a custom caption for your posts.\n\n"
-        "<b>Developer Contact:</b>\n"
-        "If you need help, you can contact my creator by clicking the button below.\n\n"
+        "<b>Hey there!</b>\n\n"
+        "<b>I am a simple bot , i can add your channel Username in new posts.</b>\n\n"
         "<blockquote><b>👨‍💻 ᴅᴇᴠʟᴏᴘᴇʀ : <a href='https://t.me/Ur_Amit_01'>ꫝᴍɪᴛ ꢺɪɴɢʜ ⚝ 🥀</a></b></blockquote
         )
         
