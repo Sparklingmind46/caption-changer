@@ -37,6 +37,17 @@ def webhook():
     if "message" in update and update["message"].get("text") == "/start":
         send_start_message(update["message"]["chat"]["id"])
 
+    if "message" in update and "text" in update["message"]:
+        # Check if the message contains the /setcaption command
+        if update["message"]["text"].startswith("/setcaption"):
+            caption = update["message"]["text"][12:].strip()  # Extract caption after the command
+            if caption:
+                # Store the caption or associate it with the chat_id (this depends on your use case)
+                save_custom_caption(update["message"]["chat"]["id"], caption)
+                send_message(update["message"]["chat"]["id"], "Custom caption set successfully!")
+            else:
+                send_message(update["message"]["chat"]["id"], "Please provide a caption after the command.")
+
     if "channel_post" in update:
         post = update["channel_post"]
         chat_id = post["chat"]["id"]
@@ -45,13 +56,19 @@ def webhook():
         # HTML formatting for bold and quote
         quoted_channel_username = f"<blockquote><b>{CHANNEL_USERNAME}</b></blockquote>"
 
+        # Check if a custom caption is available for this chat
+        custom_caption = get_custom_caption(chat_id)
+
         if "text" in post:
-            # Bold and quote the channel username using HTML
+            # Apply custom caption if available and add quoted channel username
             new_text = post["text"] + f"\n\n{quoted_channel_username}"
+            new_caption = custom_caption + f"\n\n{quoted_channel_username}" if custom_caption else quoted_channel_username
             edit_message(chat_id, message_id, new_text=new_text, parse_mode="HTML")
         elif "caption" in post:
-            # Bold and quote the channel username using HTML
+            # Apply custom caption if available and add quoted channel username
             new_caption = post["caption"] + f"\n\n{quoted_channel_username}"
+            if custom_caption:
+                new_caption = custom_caption + f"\n\n{quoted_channel_username}"
             edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="HTML")
 
     return "OK", 200
