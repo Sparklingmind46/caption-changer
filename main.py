@@ -41,15 +41,6 @@ def send_message(chat_id, text):
     if response.status_code != 200:
         print(f"Error sending message: {response.text}")
 
-# Placeholder function to save custom captions
-def save_custom_caption(chat_id, caption):
-    # Implement your logic to save the caption (e.g., database or in-memory storage)
-    print(f"Custom caption for {chat_id}: {caption}")
-
-# Placeholder function to retrieve custom captions
-def get_custom_caption(chat_id):
-    # Implement your logic to retrieve the caption (e.g., database or in-memory storage)
-    return "Default caption"
     
 # Webhook route
 @app.route("/", methods=["POST"])
@@ -76,24 +67,19 @@ def webhook():
         chat_id = post["chat"]["id"]
         message_id = post["message_id"]
 
-        # HTML formatting for quoted channel username
+    # HTML formatting for quoted channel username
         quoted_channel_username = f"<blockquote><b>{CHANNEL_USERNAME}</b></blockquote>"
-
-        # Check if a custom caption is available for this chat
-        custom_caption = get_custom_caption(chat_id)
 
         if "text" in post:
             new_text = post["text"] + f"\n\n{quoted_channel_username}"
-            new_caption = custom_caption + f"\n\n{quoted_channel_username}" if custom_caption else quoted_channel_username
             edit_message(chat_id, message_id, new_text=new_text, parse_mode="HTML")
         elif "caption" in post:
             new_caption = post["caption"] + f"\n\n{quoted_channel_username}"
-            if custom_caption:
-                new_caption = custom_caption + f"\n\n{quoted_channel_username}"
             edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="HTML")
 
     return "OK", 200
-    
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
