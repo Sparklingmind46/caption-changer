@@ -18,11 +18,19 @@ def send_start_message(chat_id):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     text = (
         "<b>Hey there!</b>\n\n"
-        "<b>I am a simple bot , i can add your channel Username in new posts.</b>\n\n"
+        "<b>I am a simple bot, I can add your channel username in new posts.</b>\n\n"
         "<blockquote><b>👨‍💻 ᴅᴇᴠʟᴏᴘᴇʀ : <a href='https://t.me/Ur_Amit_01'>ꫝᴍɪᴛ ꢺɪɴɢʜ ⚝ 🥀</a></b></blockquote>"
-        )
-        
-    data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML" }
+    )
+    
+    # Data with the 'disable_web_page_preview' parameter
+    data = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "disable_web_page_preview": True
+    }
+    
+    # Send the request to the Telegram API
     requests.post(url, data=data)
 
 # Function to send a message
