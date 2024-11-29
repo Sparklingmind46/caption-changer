@@ -19,7 +19,7 @@ def send_start_message(chat_id):
     )
     keyboard = {
         "inline_keyboard": [[
-            {"text": "Contact Developer", "url": "https://t.me/Ur_Amit_01"}
+            {"text": "Developer 🤖", "url": "https://t.me/Ur_Amit_01"}
         ]]
     }
     data = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown", "reply_markup": json.dumps(keyboard)}
