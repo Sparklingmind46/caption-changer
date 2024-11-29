@@ -17,8 +17,8 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 def send_start_message(chat_id):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     text = (
-        "Welcome to the bot, I can add channel username to every new post in your channel!\n"
-        "Contact my developer to get more info about me.\n\n"
+        "*Welcome to the bot, I can add channel username to every new post in your channel!*\n\n"
+        "*Contact my developer to get more info about me.*\n\n"
         "> *@Ur_Amit_01*"
     )
     keyboard = {
@@ -42,17 +42,21 @@ def webhook():
         chat_id = post["chat"]["id"]
         message_id = post["message_id"]
 
+        # Escape any special characters in the channel username
+        quoted_channel_username = f"> *{CHANNEL_USERNAME}*"
+        quoted_channel_username = quoted_channel_username.replace("_", "\\_").replace("*", "\\*").replace("[", "\").replace("]", "\").replace("(", "\").replace(")", "\")
+
         if "text" in post:
-            # Bold and quote the channel username
-            new_text = post["text"] + f"\n\n> *{CHANNEL_USERNAME}*"
-            edit_message(chat_id, message_id, new_text=new_text, parse_mode="Markdown")
+            # Bold and quote the channel username using MarkdownV2
+            new_text = post["text"] + f"\n\n{quoted_channel_username}"
+            edit_message(chat_id, message_id, new_text=new_text, parse_mode="MarkdownV2")
         elif "caption" in post:
-            # Bold and quote the channel username
-            new_caption = post["caption"] + f"\n\n> *{CHANNEL_USERNAME}*"
-            edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="Markdown")
+            # Bold and quote the channel username using MarkdownV2
+            new_caption = post["caption"] + f"\n\n{quoted_channel_username}"
+            edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="MarkdownV2")
 
     return "OK", 200
-
+    
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
