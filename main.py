@@ -25,13 +25,9 @@ def send_start_message(chat_id):
         "/setcaption <i>[Your custom caption]</i> - Set a custom caption for your posts.\n\n"
         "<b>Developer Contact:</b>\n"
         "If you need help, you can contact my creator by clicking the button below.\n\n"
-        "<blockquote><b>@Ur_amit_01 🥀</b></blockquote>"
-    )
-    keyboard = {
-        "inline_keyboard": [[
-            {"text": "Developer 🪷", "url": "https://t.me/Ur_Amit_01"}
-        ]]
-    }
+        "<blockquote><b>👨‍💻 ᴅᴇᴠʟᴏᴘᴇʀ : <a href="https://t.me/Ur_Amit_01">ꫝᴍɪᴛ ꢺɪɴɢʜ ⚝ 🥀</a></b></blockquote
+        )
+        
     data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": json.dumps(keyboard)}
     requests.post(url, data=data)
 
