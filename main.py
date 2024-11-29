@@ -17,7 +17,7 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 def send_start_message(chat_id):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     text = (
-        "Welcome to the bot, i can add channel username to evey new post in your channel!\n"
+        "Welcome to the bot, I can add channel username to every new post in your channel!\n"
         "Contact my developer to get more info about me.\n\n"
         "> *@Ur_Amit_01*"
     )
@@ -33,8 +33,24 @@ def send_start_message(chat_id):
 @app.route("/", methods=["POST"])
 def webhook():
     update = request.get_json()
+
     if "message" in update and update["message"].get("text") == "/start":
         send_start_message(update["message"]["chat"]["id"])
+
+    if "channel_post" in update:
+        post = update["channel_post"]
+        chat_id = post["chat"]["id"]
+        message_id = post["message_id"]
+
+        if "text" in post:
+            # Bold and quote the channel username
+            new_text = post["text"] + f"\n\n> *{CHANNEL_USERNAME}*"
+            edit_message(chat_id, message_id, new_text=new_text, parse_mode="Markdown")
+        elif "caption" in post:
+            # Bold and quote the channel username
+            new_caption = post["caption"] + f"\n\n> *{CHANNEL_USERNAME}*"
+            edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="Markdown")
+
     return "OK", 200
 
 # Configure logging
@@ -42,13 +58,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Function to edit message text or caption
-def edit_message(chat_id, message_id, new_text=None, new_caption=None):
+def edit_message(chat_id, message_id, new_text=None, new_caption=None, parse_mode=None):
     if new_text:
         url = f"{TELEGRAM_API_URL}/editMessageText"
         data = {
             "chat_id": chat_id,
             "message_id": message_id,
             "text": new_text,
+            "parse_mode": parse_mode
         }
     elif new_caption:
         url = f"{TELEGRAM_API_URL}/editMessageCaption"
@@ -56,6 +73,7 @@ def edit_message(chat_id, message_id, new_text=None, new_caption=None):
             "chat_id": chat_id,
             "message_id": message_id,
             "caption": new_caption,
+            "parse_mode": parse_mode
         }
     else:
         raise ValueError("Either new_text or new_caption must be provided.")
@@ -81,27 +99,6 @@ def set_webhook():
     if response.status_code != 200:
         raise RuntimeError(f"Failed to set webhook: {response.text}")
     return response.json()
-
-@app.route("/", methods=["POST"])
-def webhook():
-    # Parse incoming update from Telegram
-    update = request.get_json()
-
-    if "channel_post" in update:
-        post = update["channel_post"]
-        chat_id = post["chat"]["id"]
-        message_id = post["message_id"]
-
-        if "text" in post:
-            # Bold and quote the channel username
-            new_text = post["text"] + f"\n\n> *{CHANNEL_USERNAME}*"
-            edit_message(chat_id, message_id, new_text=new_text, parse_mode="Markdown")
-        elif "caption" in post:
-            # Bold and quote the channel username
-            new_caption = post["caption"] + f"\n\n> *{CHANNEL_USERNAME}*"
-            edit_message(chat_id, message_id, new_caption=new_caption, parse_mode="Markdown")
-
-    return "OK", 200
 
 @app.route("/health", methods=["GET"])
 def health_check():
