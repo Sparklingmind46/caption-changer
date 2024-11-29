@@ -6,7 +6,7 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-# Get environment variables
+# Load environment variables
 BOT_TOKEN = os.getenv("BOT_TOKEN")  # Your bot token
 CHANNEL_USERNAME = os.getenv("CHANNEL_USERNAME")  # Your channel username
 
@@ -20,70 +20,75 @@ def send_start_message(chat_id):
         "<b>Welcome to the Bot!</b>\n\n"
         "<b>This bot allows you to:</b>\n"
         "1. Add a custom caption to your channel posts.\n"
-        "2. Add your custom username to your channel posts .\n\n"
-        
+        "2. Add your custom username to your channel posts.\n\n"
         "<b>Commands:</b>\n"
         "/setcaption <i>[Your custom caption]</i> - Set a custom caption for your posts.\n\n"
-        
         "<b>Developer Contact:</b>\n"
         "If you need help, you can contact my creator by clicking the button below.\n\n"
-        
         "<blockquote><b>@Ur_amit_01 🥀</b></blockquote>"
-    ) 
+    )
     keyboard = {
         "inline_keyboard": [[
             {"text": "Developer 🪷", "url": "https://t.me/Ur_Amit_01"}
         ]]
-    } 
+    }
     data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": json.dumps(keyboard)}
-    requests.post(url, data=data) 
+    requests.post(url, data=data)
 
+# Function to send a message
 def send_message(chat_id, text):
-    token = 'BOT_TOKEN'  # Replace with your bot token
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {'chat_id': chat_id, 'text': text}
-    requests.post(url, data=payload)
+    url = f"{TELEGRAM_API_URL}/sendMessage"
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    response = requests.post(url, data=payload)
+    if response.status_code != 200:
+        print(f"Error sending message: {response.text}")
 
+# Placeholder function to save custom captions
+def save_custom_caption(chat_id, caption):
+    # Implement your logic to save the caption (e.g., database or in-memory storage)
+    print(f"Custom caption for {chat_id}: {caption}")
+
+# Placeholder function to retrieve custom captions
 def get_custom_caption(chat_id):
-    # For now, let's just return a default caption
-    return "Default caption" 
+    # Implement your logic to retrieve the caption (e.g., database or in-memory storage)
+    return "Default caption"
     
+# Webhook route
 @app.route("/", methods=["POST"])
 def webhook():
     update = request.get_json()
 
+    # Handle /start command
     if "message" in update and update["message"].get("text") == "/start":
         send_start_message(update["message"]["chat"]["id"])
 
+    # Handle /setcaption command
     if "message" in update and "text" in update["message"]:
-        # Check if the message contains the /setcaption command
         if update["message"]["text"].startswith("/setcaption"):
             caption = update["message"]["text"][12:].strip()  # Extract caption after the command
             if caption:
-                # Store the caption or associate it with the chat_id (this depends on your use case)
                 save_custom_caption(update["message"]["chat"]["id"], caption)
                 send_message(update["message"]["chat"]["id"], "Custom caption set successfully!")
             else:
                 send_message(update["message"]["chat"]["id"], "Please provide a caption after the command.")
 
+    # Handle channel posts
     if "channel_post" in update:
         post = update["channel_post"]
         chat_id = post["chat"]["id"]
         message_id = post["message_id"]
 
-        # HTML formatting for bold and quote
+        # HTML formatting for quoted channel username
         quoted_channel_username = f"<blockquote><b>{CHANNEL_USERNAME}</b></blockquote>"
 
         # Check if a custom caption is available for this chat
         custom_caption = get_custom_caption(chat_id)
 
         if "text" in post:
-            # Apply custom caption if available and add quoted channel username
             new_text = post["text"] + f"\n\n{quoted_channel_username}"
             new_caption = custom_caption + f"\n\n{quoted_channel_username}" if custom_caption else quoted_channel_username
             edit_message(chat_id, message_id, new_text=new_text, parse_mode="HTML")
         elif "caption" in post:
-            # Apply custom caption if available and add quoted channel username
             new_caption = post["caption"] + f"\n\n{quoted_channel_username}"
             if custom_caption:
                 new_caption = custom_caption + f"\n\n{quoted_channel_username}"
