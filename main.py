@@ -19,7 +19,7 @@ def send_start_message(chat_id):
     text = (
         "<b>Hey there!</b>\n\n"
         "<b>I am a simple bot , i can add your channel Username in new posts.</b>\n\n"
-        "<blockquote><b>👨‍💻 ᴅᴇᴠʟᴏᴘᴇʀ : <a href='https://t.me/Ur_Amit_01'>ꫝᴍɪᴛ ꢺɪɴɢʜ ⚝ 🥀</a></b></blockquote
+        "<blockquote><b>👨‍💻 ᴅᴇᴠʟᴏᴘᴇʀ : <a href='https://t.me/Ur_Amit_01'>ꫝᴍɪᴛ ꢺɪɴɢʜ ⚝ 🥀</a></b></blockquote>"
         )
         
     data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": json.dumps(keyboard)}
